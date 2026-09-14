@@ -13,7 +13,7 @@ import (
 	"github.com/go-gormigrate/gormigrate/v2"
 	"github.com/go-sdk/core/errx"
 	"github.com/go-sdk/core/logx"
-	"gorm.io/gorm"
+	"github.com/go-sdk/database/dbx"
 )
 
 const (
@@ -42,8 +42,8 @@ var (
 // Migration 是一个可向前执行并可选回滚的数据库版本。
 type Migration struct {
 	ID   string
-	Up   func(*gorm.DB) error
-	Down func(*gorm.DB) error
+	Up   func(*dbx.DB) error
+	Down func(*dbx.DB) error
 }
 
 // Migrations 是按 ID 排序后执行的迁移集合。
@@ -51,7 +51,7 @@ type Migrations []*Migration
 
 // Add 从直接调用方的 Go 文件名生成迁移 ID，并追加一个迁移。
 // 迁移文件发布后不得重命名，否则数据库会将其识别为新的迁移。
-func (m *Migrations) Add(up, down func(*gorm.DB) error) {
+func (m *Migrations) Add(up, down func(*dbx.DB) error) {
 	if m == nil {
 		panic("migrate: migrations is nil")
 	}
@@ -91,13 +91,13 @@ func WithValidateUnknownMigrations(enabled bool) Option {
 
 // Migrator 管理一组固定且已排序的迁移。
 type Migrator struct {
-	db         *gorm.DB
+	db         *dbx.DB
 	migrations Migrations
 	config     config
 }
 
 // New 校验并复制迁移列表，调用方后续修改原切片不会影响执行顺序。
-func New(db *gorm.DB, migrations Migrations, options ...Option) (*Migrator, error) {
+func New(db *dbx.DB, migrations Migrations, options ...Option) (*Migrator, error) {
 	if db == nil {
 		return nil, ErrDatabaseRequired
 	}
@@ -136,7 +136,7 @@ func New(db *gorm.DB, migrations Migrations, options ...Option) (*Migrator, erro
 
 // Up 按 ID 顺序执行全部尚未应用的迁移。
 func (m *Migrator) Up(ctx context.Context) error {
-	return m.execute(ctx, "up", func(db *gorm.DB, stats *executionStats) error {
+	return m.execute(ctx, "up", func(db *dbx.DB, stats *executionStats) error {
 		if len(m.migrations) == 0 {
 			return nil
 		}
@@ -146,7 +146,7 @@ func (m *Migrator) Up(ctx context.Context) error {
 
 // Down 回滚最后一个已应用迁移。未定义 Down 时仅移除该迁移记录。
 func (m *Migrator) Down(ctx context.Context) error {
-	return m.execute(ctx, "down", func(db *gorm.DB, stats *executionStats) error {
+	return m.execute(ctx, "down", func(db *dbx.DB, stats *executionStats) error {
 		count, err := m.appliedCount(db)
 		if err != nil || count == 0 {
 			return err
@@ -157,7 +157,7 @@ func (m *Migrator) Down(ctx context.Context) error {
 
 // Reset 按逆序回滚全部已应用迁移。未定义 Down 的迁移直接跳过回滚逻辑并移除记录。
 func (m *Migrator) Reset(ctx context.Context) error {
-	return m.execute(ctx, "reset", func(db *gorm.DB, stats *executionStats) error {
+	return m.execute(ctx, "reset", func(db *dbx.DB, stats *executionStats) error {
 		count, err := m.appliedCount(db)
 		if err != nil {
 			return err
@@ -172,7 +172,7 @@ func (m *Migrator) Reset(ctx context.Context) error {
 	})
 }
 
-func (m *Migrator) gormigrate(db *gorm.DB, stats *executionStats) *gormigrate.Gormigrate {
+func (m *Migrator) gormigrate(db *dbx.DB, stats *executionStats) *gormigrate.Gormigrate {
 	options := &gormigrate.Options{
 		TableName:                 TableName,
 		IDColumnName:              "id",
@@ -184,7 +184,7 @@ func (m *Migrator) gormigrate(db *gorm.DB, stats *executionStats) *gormigrate.Go
 	for _, item := range m.migrations {
 		down := item.Down
 		if down == nil {
-			down = func(*gorm.DB) error { return nil }
+			down = func(*dbx.DB) error { return nil }
 		}
 		migrations = append(migrations, &gormigrate.Migration{
 			ID:       item.ID,
@@ -195,12 +195,12 @@ func (m *Migrator) gormigrate(db *gorm.DB, stats *executionStats) *gormigrate.Go
 	return gormigrate.New(db, options, migrations)
 }
 
-func (m *Migrator) execute(ctx context.Context, operation string, run func(*gorm.DB, *executionStats) error) error {
+func (m *Migrator) execute(ctx context.Context, operation string, run func(*dbx.DB, *executionStats) error) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	stats := &executionStats{ctx: ctx, operation: operation, startedAt: time.Now(), from: "none", to: "none"}
-	err := withLock(ctx, m.db, m.config.lockTimeout, func(db *gorm.DB) error {
+	err := withLock(ctx, m.db, m.config.lockTimeout, func(db *dbx.DB) error {
 		version, err := currentVersion(db)
 		if err != nil {
 			return err
@@ -230,8 +230,8 @@ type executionStats struct {
 	to        string
 }
 
-func (s *executionStats) wrap(id, direction string, run func(*gorm.DB) error) func(*gorm.DB) error {
-	return func(db *gorm.DB) error {
+func (s *executionStats) wrap(id, direction string, run func(*dbx.DB) error) func(*dbx.DB) error {
+	return func(db *dbx.DB) error {
 		startedAt := time.Now()
 		s.executed++
 		logx.Ctx(s.ctx).Info().Str("operation", s.operation).Str("direction", direction).
@@ -259,7 +259,7 @@ func (s *executionStats) logSummary(err error) {
 		Str("from", s.from).Str("to", s.to).Dur("elapsed", time.Since(s.startedAt).Truncate(time.Millisecond)).Msg("database migration summary")
 }
 
-func currentVersion(db *gorm.DB) (string, error) {
+func currentVersion(db *dbx.DB) (string, error) {
 	exists, err := migrationTableExists(db)
 	if err != nil {
 		return "none", err
@@ -278,7 +278,7 @@ func currentVersion(db *gorm.DB) (string, error) {
 	return applied[len(applied)-1], nil
 }
 
-func (m *Migrator) appliedCount(db *gorm.DB) (int, error) {
+func (m *Migrator) appliedCount(db *dbx.DB) (int, error) {
 	exists, err := migrationTableExists(db)
 	if err != nil {
 		return 0, err
@@ -308,7 +308,7 @@ func (m *Migrator) appliedCount(db *gorm.DB) (int, error) {
 }
 
 // migrationTableExists 使用可返回错误的表枚举，避免把元数据查询失败误判为迁移表不存在。
-func migrationTableExists(db *gorm.DB) (bool, error) {
+func migrationTableExists(db *dbx.DB) (bool, error) {
 	tables, err := db.Migrator().GetTables()
 	if err != nil {
 		return false, err

@@ -23,6 +23,7 @@
 
 - `dbx` 主包不得直接导入 MySQL、PostgreSQL 或 SQLite 驱动。应用通过空白导入 `dbx/mysql`、`dbx/postgres` 或 `dbx/sqlite` 按需注册驱动。
 - `dbx.Open` 只负责打开连接、应用默认配置、注册 `core/logx` GORM Logger 和通过 `core/lifex` 管理关闭，不得隐式执行迁移。
+- 面向应用的数据库会话统一使用 `dbx.DB` 别名，常用翻译错误通过 `dbx.Is*` 判断，避免业务代码直接依赖 GORM 包。
 - `dbx.Open` 始终启用 GORM `TranslateError`，调用方传入的配置不能关闭该行为。
 - 连接池默认值从 `core/config` 的 `database.pool.*` 读取，数据库专用的 `database.<driver>.pool.*` 优先，显式 `WithPoolConfig` 的优先级最高。
 - 数据库迁移统一由 `dbx/migrate` 管理，迁移表固定为 `_migrations`。

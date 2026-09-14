@@ -30,6 +30,11 @@ import (
 db, err := dbx.Open("mysql", "user:password@tcp(localhost:3306)/app")
 ```
 
+`dbx.Open` 返回 `*dbx.DB`。它是 `gorm.DB` 的类型别名，保留全部原生方法和类型兼容性，
+业务代码不需要仅为数据库会话类型直接导入 GORM。
+
+常用的写入冲突策略可使用 `dbx.OnConflict`，同样不需要直接导入 `gorm/clause`。
+
 PostgreSQL 和 SQLite 分别使用：
 
 ```go
@@ -98,7 +103,7 @@ database:
 // migration.go
 var migrations migrate.Migrations
 
-func New(db *gorm.DB) (*migrate.Migrator, error) {
+func New(db *dbx.DB) (*migrate.Migrator, error) {
 	return migrate.New(db, migrations)
 }
 ```
@@ -107,10 +112,10 @@ func New(db *gorm.DB) (*migrate.Migrator, error) {
 // 20260914_120000_01_create_users.go
 func init() {
 	migrations.Add(
-		func(tx *gorm.DB) error {
+		func(tx *dbx.DB) error {
 			return tx.AutoMigrate(&User{})
 		},
-		func(tx *gorm.DB) error {
+		func(tx *dbx.DB) error {
 			return tx.Migrator().DropTable(&User{})
 		},
 	)
@@ -122,15 +127,18 @@ func init() {
 仍然支持显式构造迁移列表：
 
 ```go
-import "github.com/go-sdk/database/dbx/migrate"
+import (
+	"github.com/go-sdk/database/dbx"
+	"github.com/go-sdk/database/dbx/migrate"
+)
 
 migrator, err := migrate.New(db, migrate.Migrations{
 	{
 		ID: "20260913_153000_01_create_users",
-		Up: func(tx *gorm.DB) error {
+		Up: func(tx *dbx.DB) error {
 			return tx.AutoMigrate(&User{})
 		},
-		Down: func(tx *gorm.DB) error {
+		Down: func(tx *dbx.DB) error {
 			return tx.Migrator().DropTable(&User{})
 		},
 	},
@@ -199,6 +207,11 @@ err = db.WithContext(ctx).First(&user).Error
 - 记录展开参数后的 SQL、影响行数和耗时。
 - `source` 字段指向触发 SQL 的业务代码位置，自动跳过 GORM 生态和 dbx 内部帧。
 - 默认忽略 `record not found` 日志，但错误仍返回调用方。
+
+常用翻译错误可通过 `dbx.IsRecordNotFound`、`dbx.IsDuplicatedKey` 和
+`dbx.IsForeignKeyViolated` 判断。这些 helper 使用 `core/errx.Is` 匹配完整错误链；需要返回
+对应哨兵错误时，可使用 `dbx.ErrRecordNotFound`、`dbx.ErrDuplicatedKey` 和
+`dbx.ErrForeignKeyViolated`。
 
 SQL 参数可能包含邮箱、证书信息或其他敏感业务数据。不得把密码、私钥、令牌和访问密钥作为可记录的 SQL 参数；需要隐藏参数时应通过 `WithGORMConfig` 注入自定义 Logger。
 

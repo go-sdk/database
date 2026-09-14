@@ -21,9 +21,10 @@ database/
 │   ├── postgres/postgres.go         PostgreSQL 驱动注册和连接池默认值
 │   ├── sqlite/sqlite.go             SQLite 驱动注册、PRAGMA 和连接池默认值
 │   ├── db.go                        驱动注册表、Open、Options 和连接生命周期
-│   ├── error.go                     数据库初始化公共错误
+│   ├── error.go                     数据库公共错误和错误链判断
 │   ├── logger.go                    core/logx GORM Logger
-│   └── metadata.go                  公共模型元数据
+│   ├── metadata.go                  公共模型元数据
+│   └── types.go                     面向应用的 GORM 类型别名
 ├── tests/
 │   ├── db/main.go                   SQLite 示例程序
 │   ├── db/main_test.go              MySQL、MariaDB、PostgreSQL、SQLite 增删改查集成测试
@@ -53,7 +54,7 @@ dbx.Open(name, dsn, options...)
     -> gorm.Open
     -> 应用驱动默认值、core/config 连接池配置或调用方覆盖值
     -> lifex.OnDeinit(sql.DB.Close)
-    -> 返回 *gorm.DB
+    -> 返回 *dbx.DB
 ```
 
 `dbx.Open` 不执行迁移。未导入对应驱动包时返回 `ErrDriverNotRegistered`，不会隐式引入其他数据库驱动。

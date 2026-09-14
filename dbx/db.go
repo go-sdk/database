@@ -79,7 +79,7 @@ func WithPoolConfig(value PoolConfig) Option {
 }
 
 // Open 使用已注册驱动和原生 DSN 打开数据库，不执行数据库迁移。
-func Open(driverName, dsn string, options ...Option) (*gorm.DB, error) {
+func Open(driverName, dsn string, options ...Option) (*DB, error) {
 	driverName = strings.TrimSpace(strings.ToLower(driverName))
 	if driverName == "" {
 		return nil, ErrDriverRequired

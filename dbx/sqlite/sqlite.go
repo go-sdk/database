@@ -3,10 +3,8 @@ package sqlite
 
 import (
 	"strings"
-	"time"
 
 	"github.com/glebarez/sqlite"
-	"github.com/go-sdk/core/osx"
 	"gorm.io/gorm"
 
 	"github.com/go-sdk/database/dbx"
@@ -20,10 +18,10 @@ func init() {
 			return sqlite.Open(withDefaults(dsn)), nil
 		},
 		Pool: dbx.PoolConfig{
-			MaxIdleConns:    osx.GetEnv[int](1, "DBX_SQLITE_MAX_IDLE_CONNS", "DBX_MAX_IDLE_CONNS"),
-			MaxOpenConns:    osx.GetEnv[int](1, "DBX_SQLITE_MAX_OPEN_CONNS", "DBX_MAX_OPEN_CONNS"),
-			ConnMaxLifetime: osx.GetEnv[time.Duration](0, "DBX_SQLITE_CONN_MAX_LIFETIME", "DBX_CONN_MAX_LIFETIME"),
-			ConnMaxIdleTime: osx.GetEnv[time.Duration](0, "DBX_SQLITE_CONN_MAX_IDLE_TIME", "DBX_CONN_MAX_IDLE_TIME"),
+			MaxIdleConns:    1,
+			MaxOpenConns:    1,
+			ConnMaxLifetime: 0,
+			ConnMaxIdleTime: 0,
 		},
 	})
 }

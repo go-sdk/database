@@ -6,8 +6,10 @@ import (
 	"sync"
 	"time"
 
+	coreconfig "github.com/go-sdk/core/config"
 	"github.com/go-sdk/core/errx"
 	"github.com/go-sdk/core/lifex"
+	"github.com/spf13/cast"
 	"gorm.io/gorm"
 )
 
@@ -122,13 +124,29 @@ func Open(driverName, dsn string, options ...Option) (*gorm.DB, error) {
 	if err != nil {
 		return nil, errx.Wrap(err, "get sql database")
 	}
-	pool := driver.Pool
+	pool := configuredPoolConfig(driverName, driver.Pool)
 	if cfg.pool != nil {
 		pool = *cfg.pool
 	}
 	applyPoolConfig(sqlDB, pool)
 	lifex.OnDeinit(func() error { return sqlDB.Close() })
 	return db, nil
+}
+
+func configuredPoolValue[T cast.Basic](driverName, name string, fallback T) T {
+	if value, ok := coreconfig.Get[T]("database." + driverName + ".pool." + name); ok {
+		return value
+	}
+	return coreconfig.MustGet("database.pool."+name, fallback)
+}
+
+func configuredPoolConfig(driverName string, fallback PoolConfig) PoolConfig {
+	return PoolConfig{
+		MaxIdleConns:    configuredPoolValue(driverName, "max_idle_conns", fallback.MaxIdleConns),
+		MaxOpenConns:    configuredPoolValue(driverName, "max_open_conns", fallback.MaxOpenConns),
+		ConnMaxLifetime: configuredPoolValue(driverName, "conn_max_lifetime", fallback.ConnMaxLifetime),
+		ConnMaxIdleTime: configuredPoolValue(driverName, "conn_max_idle_time", fallback.ConnMaxIdleTime),
+	}
 }
 
 func defaultGORMConfig() *gorm.Config {

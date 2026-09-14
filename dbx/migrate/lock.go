@@ -64,7 +64,7 @@ func withMySQLLock(ctx context.Context, db *gorm.DB, timeout time.Duration, run 
 	if acquired.Int64 != 1 {
 		return ErrLockTimeout
 	}
-	defer func() { resultErr = combineErrors(resultErr, releaseMySQLLock(db, lockName)) }()
+	defer func() { resultErr = errx.Join(resultErr, releaseMySQLLock(db, lockName)) }()
 	return run(db)
 }
 
@@ -95,7 +95,7 @@ func withPostgresLock(ctx context.Context, db *gorm.DB, timeout time.Duration, r
 		if !acquired {
 			return ErrLockTimeout
 		}
-		defer func() { resultErr = combineErrors(resultErr, releasePostgresLock(db, lockKey)) }()
+		defer func() { resultErr = errx.Join(resultErr, releasePostgresLock(db, lockKey)) }()
 		return run(db.WithContext(ctx))
 	}
 	lockCtx, cancel := context.WithTimeout(ctx, timeout)
@@ -106,7 +106,7 @@ func withPostgresLock(ctx context.Context, db *gorm.DB, timeout time.Duration, r
 		}
 		return wrapLockError(ErrLockFailed, err)
 	}
-	defer func() { resultErr = combineErrors(resultErr, releasePostgresLock(db, lockKey)) }()
+	defer func() { resultErr = errx.Join(resultErr, releasePostgresLock(db, lockKey)) }()
 	return run(db.WithContext(ctx))
 }
 
@@ -138,7 +138,7 @@ func withSQLiteLock(ctx context.Context, db *gorm.DB, timeout time.Duration, run
 	committed := false
 	defer func() {
 		if !committed {
-			resultErr = combineErrors(resultErr, execSQLiteControl(db, "ROLLBACK"))
+			resultErr = errx.Join(resultErr, execSQLiteControl(db, "ROLLBACK"))
 		}
 	}()
 	if err := run(lockedDB.WithContext(ctx)); err != nil {
@@ -194,14 +194,4 @@ func wrapLockError(marker, cause error) error {
 		return marker
 	}
 	return errx.Wrap(marker, cause.Error())
-}
-
-func combineErrors(primary, secondary error) error {
-	if primary == nil {
-		return secondary
-	}
-	if secondary == nil {
-		return primary
-	}
-	return errx.Wrap(primary, secondary.Error())
 }

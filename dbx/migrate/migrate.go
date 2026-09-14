@@ -3,8 +3,11 @@ package migrate
 
 import (
 	"context"
+	"path/filepath"
 	"regexp"
+	"runtime"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/go-gormigrate/gormigrate/v2"
@@ -45,6 +48,21 @@ type Migration struct {
 
 // Migrations 是按 ID 排序后执行的迁移集合。
 type Migrations []*Migration
+
+// Add 从直接调用方的 Go 文件名生成迁移 ID，并追加一个迁移。
+// 迁移文件发布后不得重命名，否则数据库会将其识别为新的迁移。
+func (m *Migrations) Add(up, down func(*gorm.DB) error) {
+	if m == nil {
+		panic("migrate: migrations is nil")
+	}
+	_, filename, _, ok := runtime.Caller(1)
+	if !ok {
+		panic("migrate: caller filename is unavailable")
+	}
+	filename = filepath.Base(filename)
+	id := strings.TrimSuffix(filename, filepath.Ext(filename))
+	*m = append(*m, &Migration{ID: id, Up: up, Down: down})
+}
 
 type config struct {
 	lockTimeout               time.Duration
@@ -197,7 +215,7 @@ func (m *Migrator) execute(ctx context.Context, operation string, run func(*gorm
 		if versionErr == nil {
 			stats.to = version
 		}
-		return combineErrors(runErr, versionErr)
+		return errx.Join(runErr, versionErr)
 	})
 	stats.logSummary(err)
 	return err

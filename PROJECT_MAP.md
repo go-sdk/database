@@ -8,35 +8,35 @@
 
 ```text
 database/
-├── .github/workflows/golang.yml CI 静态检查、四数据库测试和发布
+├── .github/workflows/golang.yml     CI 静态检查、四数据库测试和发布
 ├── dbx/
 │   ├── datatype/
-│   │   ├── deleted_at.go       Unix 毫秒时间戳软删除类型及 GORM Clauses
-│   │   ├── field.go            Scanner、Valuer 和 JSON 接口约束
-│   │   └── json.go             跨数据库 JSON 类型及 gjson 路径读取
+│   │   ├── deleted_at.go            Unix 毫秒时间戳软删除类型及 GORM Clauses
+│   │   ├── field.go                 Scanner、Valuer 和 JSON 接口约束
+│   │   └── json.go                  跨数据库 JSON 类型及 gjson 路径读取
 │   ├── migrate/
-│   │   ├── lock.go             MySQL、PostgreSQL 和 SQLite 迁移锁
-│   │   └── migrate.go          迁移校验、排序及 Up、Down、Reset
-│   ├── mysql/mysql.go          MySQL 驱动注册和连接池默认值
-│   ├── postgres/postgres.go    PostgreSQL 驱动注册和连接池默认值
-│   ├── sqlite/sqlite.go        SQLite 驱动注册、PRAGMA 和连接池默认值
-│   ├── db.go                   驱动注册表、Open、Options 和连接生命周期
-│   ├── error.go                数据库初始化公共错误
-│   ├── logger.go               core/logx GORM Logger
-│   └── metadata.go             公共模型元数据
+│   │   ├── lock.go                  MySQL、PostgreSQL 和 SQLite 迁移锁
+│   │   └── migrate.go               迁移校验、排序及 Up、Down、Reset
+│   ├── mysql/mysql.go               MySQL 驱动注册和连接池默认值
+│   ├── postgres/postgres.go         PostgreSQL 驱动注册和连接池默认值
+│   ├── sqlite/sqlite.go             SQLite 驱动注册、PRAGMA 和连接池默认值
+│   ├── db.go                        驱动注册表、Open、Options 和连接生命周期
+│   ├── error.go                     数据库初始化公共错误
+│   ├── logger.go                    core/logx GORM Logger
+│   └── metadata.go                  公共模型元数据
 ├── tests/
-│   ├── db/main.go              SQLite 示例程序
-│   ├── db/main_test.go         MySQL、MariaDB、PostgreSQL、SQLite 增删改查集成测试
-│   ├── modelg/                 GORM CLI 生成的类型安全字段
-│   ├── models/                 示例模型和生成配置
-│   └── database_test.go        SQLite 集成测试
-├── docker-compose.yml          本地 MySQL、MariaDB、PostgreSQL 测试服务
-├── empty.go                    根包占位文件
-├── AGENTS.md                   仓库协作与修改规范
-├── PROJECT_MAP.md              项目结构和关键调用链
-├── README.md                   安装、公共 API 和行为说明
-├── Makefile                    生成、检查、测试、本地 docker 数据库测试和示例构建命令
-└── go.mod                      Go 模块和依赖定义
+│   ├── db/main.go                   SQLite 示例程序
+│   ├── db/main_test.go              MySQL、MariaDB、PostgreSQL、SQLite 增删改查集成测试
+│   ├── modelg/                      GORM CLI 生成的类型安全字段
+│   ├── models/                      示例模型和生成配置
+│   └── database_test.go             SQLite 集成测试
+├── docker-compose.yml               本地 MySQL、MariaDB、PostgreSQL 测试服务
+├── empty.go                         根包占位文件
+├── AGENTS.md                        仓库协作与修改规范
+├── PROJECT_MAP.md                   项目结构和关键调用链
+├── README.md                        安装、公共 API 和行为说明
+├── Makefile                         生成、检查、测试、本地 docker 数据库测试和示例构建命令
+└── go.mod                           Go 模块和依赖定义
 ```
 
 ## 数据库打开链路
@@ -51,7 +51,7 @@ dbx.Open(name, dsn, options...)
     -> 创建 GORM Dialector
     -> 注册 core/logx Logger 并始终启用错误翻译
     -> gorm.Open
-    -> 应用驱动默认值、DBX_ 环境变量或调用方覆盖值
+    -> 应用驱动默认值、core/config 连接池配置或调用方覆盖值
     -> lifex.OnDeinit(sql.DB.Close)
     -> 返回 *gorm.DB
 ```
@@ -75,6 +75,7 @@ server request context
 
 ```text
 migrate.New(db, migrations)
+    -> Migrations.Add 从直接调用方文件名生成迁移 ID
     -> 校验 YYYYMMDD_HHMMSS_NN_description
     -> 拒绝重复 ID 和空 Up
     -> 按 ID 升序排序
@@ -91,6 +92,7 @@ Up / Down / Reset
 - `Up` 执行所有未应用迁移。
 - `Down` 回滚最后一个已应用迁移。
 - `Reset` 按迁移 ID 逆序回滚所有已应用迁移。
+- 一个迁移 Go 文件通过 `Migrations.Add` 注册一个迁移，文件 basename 即迁移 ID；已发布文件不得重命名。
 - `Down` 函数可以为空；为空时不执行 schema 回滚，仅删除对应 `_migrations` 记录。
 - 未知迁移默认被拒绝，避免旧版本程序错误修改由新版本创建的 schema。
 

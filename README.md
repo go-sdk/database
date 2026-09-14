@@ -63,22 +63,63 @@ db, err := dbx.Open("postgres", dsn, dbx.WithPoolConfig(dbx.PoolConfig{
 }))
 ```
 
-连接池默认值也可以通过环境变量覆盖。驱动专用变量优先于通用变量，`WithPoolConfig` 又优先于环境变量：
+连接池默认值也可以通过 `core/config` 覆盖。数据库专用配置优先于通用配置，`WithPoolConfig` 又优先于配置文件和 `APP__` 环境变量：
 
-| 参数            | 通用变量                     | 驱动专用变量示例               |
-|-----------------|------------------------------|--------------------------------|
-| MaxIdleConns    | `DBX_MAX_IDLE_CONNS`         | `DBX_MYSQL_MAX_IDLE_CONNS`     |
-| MaxOpenConns    | `DBX_MAX_OPEN_CONNS`         | `DBX_POSTGRES_MAX_OPEN_CONNS`  |
-| ConnMaxLifetime | `DBX_CONN_MAX_LIFETIME`      | `DBX_SQLITE_CONN_MAX_LIFETIME` |
-| ConnMaxIdleTime | `DBX_CONN_MAX_IDLE_TIME`     | `DBX_MYSQL_CONN_MAX_IDLE_TIME` |
+| 参数            | 通用配置                              | PostgreSQL 专用配置示例                          |
+|-----------------|---------------------------------------|--------------------------------------------------|
+| MaxIdleConns    | `database.pool.max_idle_conns`        | `database.postgres.pool.max_idle_conns`          |
+| MaxOpenConns    | `database.pool.max_open_conns`        | `database.postgres.pool.max_open_conns`          |
+| ConnMaxLifetime | `database.pool.conn_max_lifetime`     | `database.postgres.pool.conn_max_lifetime`       |
+| ConnMaxIdleTime | `database.pool.conn_max_idle_time`    | `database.postgres.pool.conn_max_idle_time`      |
 
-驱动名前缀分别为 `DBX_MYSQL_`、`DBX_POSTGRES_` 和 `DBX_SQLITE_`。连接数使用整数，时间使用 Go duration，例如 `30m`、`5m` 或 `0`。环境变量在驱动包初始化时读取。
+数据库专用路径中的驱动名为 `mysql`、`postgres` 或 `sqlite`。连接数使用整数，时间使用 Go duration，例如 `30m`、`5m` 或 `0`。环境变量遵循 `core/config` 的路径规则，例如 `APP__DATABASE__POOL__MAX_OPEN_CONNS=200` 和 `APP__DATABASE__POSTGRES__POOL__MAX_OPEN_CONNS=300`。
+
+```yaml
+database:
+  pool:
+    max_idle_conns: 20
+    max_open_conns: 200
+    conn_max_lifetime: 30m
+    conn_max_idle_time: 5m
+  postgres:
+    pool:
+      max_open_conns: 300
+```
+
+连接池配置在每次 `Open` 时读取，因此应用可以在打开数据库前通过 `core/config.SetDefault` 安装自己的配置实例。
 
 `Open` 通过 `core/lifex` 注册底层 `sql.DB` 的关闭函数，但不会执行数据库迁移。
 
 ## 数据库迁移
 
-迁移与数据库初始化相互独立：
+迁移与数据库初始化相互独立。推荐在应用的迁移包中声明集合，并让每个 Go 文件注册一个迁移：
+
+```go
+// migration.go
+var migrations migrate.Migrations
+
+func New(db *gorm.DB) (*migrate.Migrator, error) {
+	return migrate.New(db, migrations)
+}
+```
+
+```go
+// 20260914_120000_01_create_users.go
+func init() {
+	migrations.Add(
+		func(tx *gorm.DB) error {
+			return tx.AutoMigrate(&User{})
+		},
+		func(tx *gorm.DB) error {
+			return tx.Migrator().DropTable(&User{})
+		},
+	)
+}
+```
+
+`Migrations.Add` 从直接调用方文件名去掉 `.go` 后得到迁移 ID。每个迁移文件只能注册一个迁移，且必须直接调用 `Add`，不能通过公共 helper 间接调用。迁移文件一旦发布不得重命名，否则数据库会将新文件名识别为新的迁移。
+
+仍然支持显式构造迁移列表：
 
 ```go
 import "github.com/go-sdk/database/dbx/migrate"
@@ -109,7 +150,7 @@ if err := migrator.Up(ctx); err != nil {
 YYYYMMDD_HHMMSS_NN_description
 ```
 
-日期和时间必须有效，`NN` 是两位排序号，说明只使用小写英文、数字和下划线。Migrator 会复制列表并按 ID 升序排序。
+日期和时间必须有效，`NN` 是两位排序号，说明只使用小写英文、数字和下划线。无论通过 `Add` 还是显式列表注册，Migrator 都会复制列表、校验重复 ID 和空 `Up`，再按 ID 升序排序。
 
 公开操作：
 

@@ -20,6 +20,17 @@ type migrationRecord struct {
 	Name string
 }
 
+func TestMigrationsAddUsesCallerFilename(t *testing.T) {
+	var migrations Migrations
+	migrations.Add(func(*gorm.DB) error { return nil }, nil)
+	if len(migrations) != 1 {
+		t.Fatalf("unexpected migration count: %d", len(migrations))
+	}
+	if got := migrations[0].ID; got != "migrate_test" {
+		t.Fatalf("migration ID was not derived from the caller filename: %q", got)
+	}
+}
+
 func TestNewSortsAndValidatesMigrations(t *testing.T) {
 	db := openSQLite(t, filepath.Join(t.TempDir(), "sort.db"))
 	migrator, err := New(db, Migrations{

@@ -24,9 +24,10 @@
 - `dbx` 主包不得直接导入 MySQL、PostgreSQL 或 SQLite 驱动。应用通过空白导入 `dbx/mysql`、`dbx/postgres` 或 `dbx/sqlite` 按需注册驱动。
 - `dbx.Open` 只负责打开连接、应用默认配置、注册 `core/logx` GORM Logger 和通过 `core/lifex` 管理关闭，不得隐式执行迁移。
 - `dbx.Open` 始终启用 GORM `TranslateError`，调用方传入的配置不能关闭该行为。
-- 连接池默认值允许通过 `DBX_` 通用变量或数据库专用变量覆盖，显式 `WithPoolConfig` 的优先级最高。
+- 连接池默认值从 `core/config` 的 `database.pool.*` 读取，数据库专用的 `database.<driver>.pool.*` 优先，显式 `WithPoolConfig` 的优先级最高。
 - 数据库迁移统一由 `dbx/migrate` 管理，迁移表固定为 `_migrations`。
 - 迁移 ID 使用 `YYYYMMDD_HHMMSS_NN_description`，构造 Migrator 时校验并排序。
+- `Migrations.Add` 从直接调用方的 Go 文件名生成迁移 ID，一个迁移文件只注册一个迁移；已发布的迁移文件不得重命名。
 - `Up`、`Down` 和 `Reset` 必须在数据库级互斥锁内执行；锁必须绑定同一个物理连接，不能依赖连接池碰巧复用连接。
 - MySQL 和 MariaDB 执行迁移前必须已经选定目标数据库，DSN 未包含数据库名时返回错误。
 - `Down` 回滚最后一个已应用版本，`Reset` 逆序回滚全部已应用版本；迁移未定义 `Down` 时仅移除迁移记录，不返回错误。

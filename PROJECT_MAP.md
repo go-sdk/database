@@ -32,7 +32,6 @@ database/
 │   ├── models/                      示例模型和生成配置
 │   └── database_test.go             SQLite 集成测试
 ├── docker-compose.yml               本地 MySQL、MariaDB、PostgreSQL 测试服务
-├── empty.go                         根包占位文件
 ├── AGENTS.md                        仓库协作与修改规范
 ├── PROJECT_MAP.md                   项目结构和关键调用链
 ├── README.md                        安装、公共 API 和行为说明

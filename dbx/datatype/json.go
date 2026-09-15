@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 
+	codecjson "github.com/go-sdk/core/codec/json"
 	"github.com/go-sdk/core/errx"
 	"github.com/spf13/cast"
 	"github.com/tidwall/gjson"
@@ -74,6 +75,19 @@ func (x JSON) Parse() gjson.Result { return gjson.ParseBytes(x) }
 
 // Get 使用 gjson 路径语法读取文档中的值。
 func (x JSON) Get(path string) gjson.Result { return gjson.GetBytes(x, path) }
+
+// Unmarshal 使用 core/codec/json 将文档反序列化为类型 T，文档不完整或与 T 结构不匹配时返回错误，
+// 失败时保持 T 的零值。
+func (x JSON) Unmarshal[T any]() (t T, err error) {
+	err = codecjson.Unmarshal([]byte(x), &t)
+	return
+}
+
+// MustUnmarshal 行为与 Unmarshal 一致，但失败时 panic 并由 core/codec/json 统一打印调用堆栈，
+// 仅适用于文档格式已在初始化阶段保证正确的场景。
+func (x JSON) MustUnmarshal[T any]() T {
+	return codecjson.MustUnmarshal[T]([]byte(x))
+}
 
 func (JSON) GormDataType() string { return "json" }
 

@@ -228,6 +228,19 @@ valid := user.Extra.Valid()
 root := user.Extra.Parse()
 ```
 
+需要完整结构时使用 `Unmarshal` 反序列化为目标类型，失败时返回错误；`MustUnmarshal` 在文档格式已在初始化阶段保证正确的场景下省略错误处理，失败时会打印调用堆栈并 panic：
+
+```go
+type Extra struct {
+	Language string `json:"language"`
+}
+
+extra, err := user.Extra.Unmarshal[Extra]()
+if err != nil {
+	return err
+}
+```
+
 数据库字段类型为 MySQL `JSON`、PostgreSQL `JSONB` 和 SQLite `JSON`。写入时，空 Go 值写为 SQL NULL，JSON `null` 仍作为 JSON 文档保存；从数据库读取后，SQL NULL 统一表示为 JSON `null`，两者不再区分。MySQL 写入使用 `CAST(? AS JSON)`；MariaDB 不支持该语法，因此根据 GORM 初始化时保存的服务端版本自动退回直接字符串参数，不会在 SQL 构建阶段额外查询数据库。
 
 JSON 和 DeletedAt 的数据库 `Scan(any)` 使用 cast 做基础类型转换，并在转换后继续校验 JSON 合法性、整数溢出和负时间戳，避免无错误的截断或非法持久化。

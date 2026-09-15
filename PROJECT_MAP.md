@@ -118,6 +118,7 @@ MySQL 和 MariaDB 获取迁移锁前会验证当前数据库，DSN 未选定数�
 - 扫描数据库字节时复制缓冲区并验证 JSON。
 - 使用 cast 转换数据库驱动返回的 `any`，转换失败时返回错误。
 - `Get`、`Parse` 和 `Valid` 直接使用 gjson。
+- `Unmarshal` 和 `MustUnmarshal` 使用 `core/codec/json` 反序列化为目标类型，`MustUnmarshal` 失败时 panic 并由 `core/codec/json` 统一打印堆栈。
 - MySQL 使用 `JSON`，PostgreSQL 使用 `JSONB`，SQLite 使用 `JSON`；MariaDB 不支持 `CAST(... AS JSON)`，写入时退回直接字符串参数。
 - MariaDB 判断复用 GORM MySQL Dialector 初始化时保存的 `ServerVersion`，SQL 构建阶段不会额外访问数据库。
 

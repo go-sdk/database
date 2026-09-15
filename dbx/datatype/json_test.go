@@ -66,6 +66,65 @@ func TestJSONNull(t *testing.T) {
 	}
 }
 
+type jsonDocument struct {
+	Name    string `json:"name"`
+	Enabled bool   `json:"enabled"`
+}
+
+func TestJSONUnmarshal(t *testing.T) {
+	value := JSON(`{"name":"alice","enabled":true}`)
+	document, err := value.Unmarshal[jsonDocument]()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if document != (jsonDocument{Name: "alice", Enabled: true}) {
+		t.Fatalf("unexpected unmarshaled document: %+v", document)
+	}
+}
+
+func TestJSONUnmarshalErrors(t *testing.T) {
+	tests := []struct {
+		name  string
+		value JSON
+	}{
+		{name: "empty document", value: JSON(``)},
+		{name: "incomplete document", value: JSON(`{"name":`)},
+		{name: "type mismatch", value: JSON(`{"name":true}`)},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			document, err := test.value.Unmarshal[jsonDocument]()
+			if err == nil {
+				t.Fatal("Unmarshal should reject the document")
+			}
+			if document != (jsonDocument{}) {
+				t.Fatalf("failed Unmarshal should keep zero value: %+v", document)
+			}
+		})
+	}
+}
+
+func TestJSONMustUnmarshal(t *testing.T) {
+	value := JSON(`{"name":"alice","enabled":true}`)
+	if document := value.MustUnmarshal[jsonDocument](); document != (jsonDocument{Name: "alice", Enabled: true}) {
+		t.Fatalf("unexpected unmarshaled document: %+v", document)
+	}
+}
+
+func TestJSONMustUnmarshalPanics(t *testing.T) {
+	defer func() {
+		recovered := recover()
+		if recovered == nil {
+			t.Fatal("MustUnmarshal should panic on invalid JSON")
+		}
+		if _, ok := recovered.(error); !ok {
+			t.Fatalf("panic value should be an error: %#v", recovered)
+		}
+	}()
+	JSON(`{"name":`).MustUnmarshal[jsonDocument]()
+	t.Fatal("MustUnmarshal should panic on invalid JSON")
+}
+
 func TestJSONDatabaseTypes(t *testing.T) {
 	tests := []struct {
 		name      string

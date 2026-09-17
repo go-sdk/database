@@ -4,8 +4,8 @@ go 1.27.0
 
 require (
 	github.com/glebarez/sqlite v1.11.0
-	github.com/go-gormigrate/gormigrate/v2 v2.1.6
-	github.com/go-sdk/core v1.4.2
+	github.com/go-gormigrate/gormigrate/v2 v2.1.7
+	github.com/go-sdk/core v1.4.6
 	github.com/go-sql-driver/mysql v1.10.1
 	github.com/rs/zerolog v1.35.1
 	github.com/shopspring/decimal v1.4.0
@@ -13,7 +13,7 @@ require (
 	github.com/tidwall/gjson v1.19.0
 	gorm.io/cli/gorm v0.2.4
 	gorm.io/driver/mysql v1.6.0
-	gorm.io/driver/postgres v1.6.2
+	gorm.io/driver/postgres v1.6.3
 	gorm.io/gorm v1.31.2
 )
 
@@ -47,8 +47,8 @@ require (
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
-	modernc.org/libc v1.75.7 // indirect
+	modernc.org/libc v1.76.0 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.12.1 // indirect
-	modernc.org/sqlite v1.58.0 // indirect
+	modernc.org/sqlite v1.59.0 // indirect
 )

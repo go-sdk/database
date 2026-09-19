@@ -19,8 +19,8 @@ github.com/glebarez/sqlite v1.11.0 h1:wSG0irqzP6VurnMEpFGer5Li19RpIRi2qvQz++w0GM
 github.com/glebarez/sqlite v1.11.0/go.mod h1:h8/o8j5wiAsqSPoWELDUdJXhjAhsVliSn7bWZjOhrgQ=
 github.com/go-gormigrate/gormigrate/v2 v2.1.7 h1:PdT4jVPbRb4R+0Ey2R0yJOdctVf4Whiq1Qi4necaZdg=
 github.com/go-gormigrate/gormigrate/v2 v2.1.7/go.mod h1:3ouXglTuPrKF5+7cQyVGfvAXTU4vLMaYh9+EPl03uog=
-github.com/go-sdk/core v1.5.0 h1:Wj99e+Xtz+7HWQlDWfHSgP5W8OAuNV//iaZSsi7Hmco=
-github.com/go-sdk/core v1.5.0/go.mod h1:xxWmM4yoJ7hpm1h56aqLTleMpSidRrwBXEPbOSfz4Pc=
+github.com/go-sdk/core v1.5.1 h1:ELtvg6VEXoKH2r6KLTOx6Em0C4GKJKhpZDTwYmOtSnc=
+github.com/go-sdk/core v1.5.1/go.mod h1:xxWmM4yoJ7hpm1h56aqLTleMpSidRrwBXEPbOSfz4Pc=
 github.com/go-sql-driver/mysql v1.10.1 h1:arlSnNLq6a5yxGxV7qg9lF4j0C+KwD6NbQyKr9QL6ME=
 github.com/go-sql-driver/mysql v1.10.1/go.mod h1:M+cqaI7+xxXGG9swrdeUIoPG3Y3KCkF0pZej+SK+nWk=
 github.com/go-viper/mapstructure/v2 v2.5.0 h1:vM5IJoUAy3d7zRSVtIwQgBj7BiWtMPfmPEgAXnvj1Ro=

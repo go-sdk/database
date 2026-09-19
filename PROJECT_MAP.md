@@ -2,7 +2,7 @@
 
 ## 项目定位
 
-`github.com/go-sdk/database` 是基于 GORM 的数据库基础类库，通过按需注册的驱动统一 MySQL、PostgreSQL 和 SQLite 初始化，提供 `core/logx` 日志适配、gormigrate 版本迁移、跨副本迁移锁以及 JSON 和毫秒时间戳软删除类型。
+`github.com/go-sdk/database` 是数据库基础类库，通过按需注册的驱动统一 MySQL、PostgreSQL 和 SQLite 初始化，并提供 Redis 单机/Sentinel 客户端、Redis 租约锁、`core/logx` 日志适配、gormigrate 版本迁移、跨副本迁移锁以及 JSON 和毫秒时间戳软删除类型。
 
 ## 目录结构
 
@@ -25,6 +25,9 @@ database/
 │   ├── logger.go                    core/logx GORM Logger
 │   ├── metadata.go                  公共模型元数据
 │   └── types.go                     面向应用的 GORM 类型别名
+├── rdx/
+│   ├── lock/lock.go                 持有者令牌校验的 Redis 租约锁
+│   └── rdx.go                       Redis 单机/Sentinel 初始化和生命周期
 ├── tests/
 │   ├── db/main.go                   SQLite 示例程序
 │   ├── db/main_test.go              MySQL、MariaDB、PostgreSQL、SQLite 增删改查集成测试
@@ -57,6 +60,21 @@ dbx.Open(name, dsn, options...)
 ```
 
 `dbx.Open` 不执行迁移。未导入对应驱动包时返回 `ErrDriverNotRegistered`，不会隐式引入其他数据库驱动。
+
+## Redis 打开链路
+
+```text
+rdx.Open(ctx, config)
+    -> 规范化并校验 mode、地址、Sentinel master 和连接池参数
+    -> standalone 创建 redis.Client，sentinel 创建 FailoverClient
+    -> Ping 确认连接和凭据可用
+    -> lifex.OnDeinit(client.Close)
+    -> 返回 redis.UniversalClient
+```
+
+`rdx/lock` 使用 `SET NX PX` 获取租约，并通过校验随机 owner token 的 Lua 脚本续租和释放。
+Sentinel 主从切换可能丢失尚未复制的锁，因此该租约只负责降低并发冲突；涉及权威状态的业务仍需
+使用数据库 fencing token、版本条件更新或等价机制拒绝过期持有者。
 
 ## 日志链路
 

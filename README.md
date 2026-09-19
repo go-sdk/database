@@ -95,6 +95,45 @@ database:
 
 `Open` 通过 `core/lifex` 注册底层 `sql.DB` 的关闭函数，但不会执行数据库迁移。
 
+## Redis
+
+`rdx` 统一创建 Redis 单机或 Sentinel 客户端，连接成功后执行 `PING`，并通过 `core/lifex`
+登记关闭函数。地址、用户名和密码不会写入初始化日志。
+
+```go
+client, err := rdx.Open(ctx, rdx.Config{
+	Mode:      rdx.ModeStandalone,
+	Addresses: []string{"127.0.0.1:6379"},
+	Password:  redisPassword,
+})
+```
+
+Sentinel 模式使用 Sentinel 地址和 master 名称，Redis 数据节点与 Sentinel 的凭据分别配置：
+
+```go
+client, err := rdx.Open(ctx, rdx.Config{
+	Mode:             rdx.ModeSentinel,
+	Addresses:        []string{"sentinel-1:26379", "sentinel-2:26379"},
+	MasterName:       "mymaster",
+	Username:         redisUsername,
+	Password:         redisPassword,
+	SentinelUsername: sentinelUsername,
+	SentinelPassword: sentinelPassword,
+})
+```
+
+`rdx/lock` 使用随机 owner token 获取租约，续租和释放都由 Lua 脚本原子校验持有者：
+
+```go
+manager, err := lock.New(client, "certops:lock")
+lease, err := manager.Acquire(ctx, "installation-point:123", 30*time.Second)
+err = lease.Renew(ctx, 30*time.Second)
+err = lease.Unlock(ctx)
+```
+
+Redis Sentinel 的异步复制可能在主从切换时丢失尚未复制的锁。租约不能单独作为业务正确性边界；
+调用方必须结合数据库 fencing token、版本条件更新或等价机制拒绝过期持有者。
+
 ## 数据库迁移
 
 迁移与数据库初始化相互独立。推荐在应用的迁移包中声明集合，并让每个 Go 文件注册一个迁移：

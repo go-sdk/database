@@ -88,6 +88,7 @@ server request context
 ```
 
 正常模式只记录错误和超过 200ms 的慢查询；debug 模式记录普通 SQL。日志包含展开参数后的 SQL、行数和耗时，因此调用方必须控制敏感字段的日志风险。SQL 日志的 `source` 字段跳过 GORM 生态（gorm.io、gormigrate、glebarez）和 dbx 内部帧，指向业务调用方。
+后台轮询等高频路径可以使用 `dbx.WithoutQueryLog(ctx)` 忽略普通 SQL，错误和慢查询仍会记录。
 
 ## 迁移链路
 

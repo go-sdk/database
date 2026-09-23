@@ -247,6 +247,13 @@ err = db.WithContext(ctx).First(&user).Error
 - `source` 字段指向触发 SQL 的业务代码位置，自动跳过 GORM 生态和 dbx 内部帧。
 - 默认忽略 `record not found` 日志，但错误仍返回调用方。
 
+后台轮询等高频路径可以只忽略普通 SQL 日志，错误和慢查询仍会记录：
+
+```go
+ctx = dbx.WithoutQueryLog(ctx)
+err = db.WithContext(ctx).First(&job).Error
+```
+
 常用翻译错误可通过 `dbx.IsRecordNotFound`、`dbx.IsDuplicatedKey` 和
 `dbx.IsForeignKeyViolated` 判断。这些 helper 使用 `core/errx.Is` 匹配完整错误链；需要返回
 对应哨兵错误时，可使用 `dbx.ErrRecordNotFound`、`dbx.ErrDuplicatedKey` 和

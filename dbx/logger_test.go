@@ -40,6 +40,38 @@ func TestGORMLoggerRecordsError(t *testing.T) {
 	}
 }
 
+func TestGORMLoggerWithoutQueryLog(t *testing.T) {
+	var output bytes.Buffer
+	contextLogger := zerolog.New(&output)
+	ctx := WithoutQueryLog(contextLogger.WithContext(context.Background()))
+	adapter := NewLogger(LoggerConfig{
+		SlowThreshold: time.Millisecond,
+		LogLevel:      logger.Info,
+	})
+
+	adapter.Trace(ctx, time.Now(), func() (string, int64) {
+		return "SELECT 1", 1
+	}, nil)
+	if output.Len() != 0 {
+		t.Fatalf("normal query should not be logged: %s", output.String())
+	}
+
+	adapter.Trace(ctx, time.Now().Add(-time.Second), func() (string, int64) {
+		return "SELECT slow", 1
+	}, nil)
+	if text := output.String(); !strings.Contains(text, "gorm slow query") || !strings.Contains(text, "SELECT slow") {
+		t.Fatalf("slow query should still be logged: %s", text)
+	}
+
+	output.Reset()
+	adapter.Trace(ctx, time.Now(), func() (string, int64) {
+		return "SELECT failed", -1
+	}, errx.New("query failed"))
+	if text := output.String(); !strings.Contains(text, "query failed") || !strings.Contains(text, "SELECT failed") {
+		t.Fatalf("query error should still be logged: %s", text)
+	}
+}
+
 func TestGORMLoggerSourcePointsToCaller(t *testing.T) {
 	var output bytes.Buffer
 	contextLogger := zerolog.New(&output)

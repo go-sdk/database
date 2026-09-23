@@ -38,6 +38,18 @@ type gormLogger struct{ config LoggerConfig }
 
 var _ logger.Interface = (*gormLogger)(nil)
 
+type withoutQueryLogContextKey struct{}
+
+// WithoutQueryLog 返回忽略普通 SQL 查询日志的 context，错误和慢查询仍按原有级别记录。
+func WithoutQueryLog(ctx context.Context) context.Context {
+	return context.WithValue(ctx, withoutQueryLogContextKey{}, true)
+}
+
+func withoutQueryLog(ctx context.Context) bool {
+	value, _ := ctx.Value(withoutQueryLogContextKey{}).(bool)
+	return value
+}
+
 // dbxSourceDir 当前文件所在目录，用于识别调用栈中 dbx 内部实现帧。
 var dbxSourceDir = func() string {
 	_, file, _, _ := runtime.Caller(0)
@@ -119,7 +131,7 @@ func (l *gormLogger) Trace(ctx context.Context, begin time.Time, sqlFunc func() 
 		logx.Ctx(ctx).Warn().Str("source", callerSource()).Str("sql", sqlText).
 			Int64("rows", rows).Dur("elapsed", elapsed).
 			Dur("slow_threshold", l.config.SlowThreshold).Msg("gorm slow query")
-	case l.config.LogLevel == logger.Info:
+	case l.config.LogLevel == logger.Info && !withoutQueryLog(ctx):
 		sqlText, rows := sqlFunc()
 		logx.Ctx(ctx).Info().Str("source", callerSource()).Str("sql", sqlText).
 			Int64("rows", rows).Dur("elapsed", elapsed).Msg("gorm query")

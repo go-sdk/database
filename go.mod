@@ -5,7 +5,7 @@ go 1.27.0
 require (
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-gormigrate/gormigrate/v2 v2.1.7
-	github.com/go-sdk/core v1.5.1
+	github.com/go-sdk/core v1.5.3
 	github.com/go-sql-driver/mysql v1.10.1
 	github.com/redis/go-redis/v9 v9.22.0
 	github.com/rs/zerolog v1.35.1

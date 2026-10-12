@@ -34,6 +34,7 @@ db, err := dbx.Open("mysql", "user:password@tcp(localhost:3306)/app")
 业务代码不需要仅为数据库会话类型直接导入 GORM。
 
 常用的写入冲突策略可使用 `dbx.OnConflict`，同样不需要直接导入 `gorm/clause`。
+支持 `RETURNING` 的数据库可使用 `dbx.Returning` 返回写入操作影响的记录，通过 `Columns` 指定返回列；留空时返回全部列。
 
 PostgreSQL 和 SQLite 分别使用：
 

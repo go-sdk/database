@@ -20,6 +20,9 @@ type Column = clause.Column
 // OnConflict 是 GORM 写入冲突策略的类型别名。
 type OnConflict = clause.OnConflict
 
+// Returning 是 GORM RETURNING 子句的类型别名，用于返回写入操作影响的记录或指定列。
+type Returning = clause.Returning
+
 // Locking 是 GORM 行级锁子句的类型别名，用于生成 FOR UPDATE、FOR SHARE 等锁定语句。
 type Locking = clause.Locking
 

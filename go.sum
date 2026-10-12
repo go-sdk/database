@@ -31,8 +31,8 @@ github.com/go-playground/universal-translator v0.18.2 h1:LCsMLC9RzmbUMNUPVYD15dm
 github.com/go-playground/universal-translator v0.18.2/go.mod h1:67VZIMp5lQpDWlnStOct22q1bkdJGJqHghbOtmkawxk=
 github.com/go-playground/validator/v10 v10.30.5 h1:YyCXvVShZbs2Sm3Mb53eNOlhRXctSOzW5QJAouCTZL4=
 github.com/go-playground/validator/v10 v10.30.5/go.mod h1:wEqiaov48pXX1kjhc3Da8y0M0Dtg/BK7gurFBLgwFrQ=
-github.com/go-sdk/core v1.6.3 h1:ZNSrS5y700hQcHMR5Wyi8GvW0ohzlRpqmt4dC9vPXAY=
-github.com/go-sdk/core v1.6.3/go.mod h1:iJcTgyATs31ZY4I24tpYC2HIFgcJs0ai8XIUsIHXpWM=
+github.com/go-sdk/core v1.6.5 h1:qfzUPVat5KB4J4t/mhRhoN3UtEdQV1fh3pzQENJ793s=
+github.com/go-sdk/core v1.6.5/go.mod h1:iJcTgyATs31ZY4I24tpYC2HIFgcJs0ai8XIUsIHXpWM=
 github.com/go-sql-driver/mysql v1.10.1 h1:arlSnNLq6a5yxGxV7qg9lF4j0C+KwD6NbQyKr9QL6ME=
 github.com/go-sql-driver/mysql v1.10.1/go.mod h1:M+cqaI7+xxXGG9swrdeUIoPG3Y3KCkF0pZej+SK+nWk=
 github.com/go-viper/mapstructure/v2 v2.5.0 h1:vM5IJoUAy3d7zRSVtIwQgBj7BiWtMPfmPEgAXnvj1Ro=

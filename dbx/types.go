@@ -3,10 +3,37 @@ package dbx
 import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"gorm.io/gorm/logger"
 )
 
 // DB 是 GORM 数据库会话的类型别名，保留全部原生方法和类型兼容性。
 type DB = gorm.DB
+
+// Config 是 GORM 打开连接时使用的配置类型别名，供 WithGORMConfig 使用。
+type Config = gorm.Config
+
+// Session 是 GORM 会话配置的类型别名，用于创建独立会话或调整查询行为。
+type Session = gorm.Session
+
+// GORMOption 是 GORM 连接选项的类型别名，与 dbx 自身的 Option 区分。
+type GORMOption = gorm.Option
+
+// Dialector 是 GORM 数据库方言接口的类型别名，供自定义驱动注册使用。
+type Dialector = gorm.Dialector
+
+// Logger 是 GORM 日志接口的类型别名，供注入自定义日志实现使用。
+type Logger = logger.Interface
+
+// LogLevel 是 GORM SQL 日志级别的类型别名。
+type LogLevel = logger.LogLevel
+
+// SQL 日志级别与 GORM 保持一致；LogSilent 禁用全部 SQL 日志。
+const (
+	LogSilent = logger.Silent
+	LogError  = logger.Error
+	LogWarn   = logger.Warn
+	LogInfo   = logger.Info
+)
 
 // Expr 是 GORM 原生 SQL 表达式的类型别名，用于在查询和更新中嵌入 SQL 片段。
 type Expr = clause.Expr

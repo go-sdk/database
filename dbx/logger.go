@@ -17,9 +17,12 @@ import (
 // LoggerConfig 定义 GORM 日志级别和慢查询阈值。
 type LoggerConfig struct {
 	SlowThreshold             time.Duration
-	LogLevel                  logger.LogLevel
+	LogLevel                  LogLevel
 	IgnoreRecordNotFoundError bool
 }
+
+// DiscardLogger 禁用全部 GORM 日志；敏感参数仍由调用方自己的操作日志脱敏。
+var DiscardLogger = logger.Discard
 
 // DefaultLoggerConfig 返回与 core/logx 默认级别一致的 GORM 日志配置。
 func DefaultLoggerConfig() LoggerConfig {
@@ -87,11 +90,11 @@ func callerSource() string {
 }
 
 // NewLogger 创建从 GORM context 读取 core/logx Logger 的日志适配器。
-func NewLogger(config LoggerConfig) logger.Interface {
+func NewLogger(config LoggerConfig) Logger {
 	return &gormLogger{config: config}
 }
 
-func (l *gormLogger) LogMode(level logger.LogLevel) logger.Interface {
+func (l *gormLogger) LogMode(level LogLevel) Logger {
 	copyValue := *l
 	copyValue.config.LogLevel = level
 	return &copyValue

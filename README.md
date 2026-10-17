@@ -33,6 +33,21 @@ db, err := dbx.Open("mysql", "user:password@tcp(localhost:3306)/app")
 `dbx.Open` 返回 `*dbx.DB`。它是 `gorm.DB` 的类型别名，保留全部原生方法和类型兼容性，
 业务代码不需要仅为数据库会话类型直接导入 GORM。
 
+连接配置和会话配置分别使用 `dbx.Config`、`dbx.Session`，与上游类型完全兼容：
+
+```go
+db, err := dbx.Open("postgres", dsn, dbx.WithGORMConfig(&dbx.Config{
+	DisableAutomaticPing: true,
+	Logger:               dbx.DiscardLogger,
+}))
+// 自动 Ping 被禁用时，由调用方使用底层连接池的 PingContext 检查连接。
+session := db.Session(&dbx.Session{NewDB: true, Context: ctx})
+```
+
+`dbx.GORMOption` 对应 `WithGORMOptions` 的选项类型，区别于 `dbx.Open` 自身的 `dbx.Option`；
+`dbx.Dialector` 用于自定义驱动的 `DialectorFunc` 返回值。
+这些入口均为类型别名，不增加适配层，也不改变 GORM 的会话或连接行为。
+
 常用的写入冲突策略可使用 `dbx.OnConflict`，同样不需要直接导入 `gorm/clause`。
 支持 `RETURNING` 的数据库可使用 `dbx.Returning` 返回写入操作影响的记录，通过 `Columns` 指定返回列；留空时返回全部列。
 
@@ -260,7 +275,14 @@ err = db.WithContext(ctx).First(&job).Error
 对应哨兵错误时，可使用 `dbx.ErrRecordNotFound`、`dbx.ErrDuplicatedKey` 和
 `dbx.ErrForeignKeyViolated`。
 
-SQL 参数可能包含邮箱、证书信息或其他敏感业务数据。不得把密码、私钥、令牌和访问密钥作为可记录的 SQL 参数；需要隐藏参数时应通过 `WithGORMConfig` 注入自定义 Logger。
+`dbx.Logger` 和 `dbx.LogLevel` 分别为上游日志接口和级别的别名；`LoggerConfig.LogLevel`、
+`NewLogger` 和 `LogMode` 均可通过这些入口使用，不需要直接导入 `gorm/logger`。
+级别使用 `dbx.LogSilent`、`dbx.LogError`、`dbx.LogWarn` 和 `dbx.LogInfo`。
+例如 `dbx.NewLogger(dbx.LoggerConfig{LogLevel: dbx.LogSilent})` 关闭 SQL 日志。
+
+SQL 参数可能包含邮箱、证书信息或其他敏感业务数据。不得把密码、私钥、令牌和访问密钥作为可记录的 SQL 参数；
+需要完全关闭 GORM 日志时，通过 `WithGORMConfig` 设置 `Logger: dbx.DiscardLogger`；需要保留经过脱敏的日志时，注入自定义 `dbx.Logger`。
+`DiscardLogger` 直接复用上游静默 Logger，不影响应用自己的操作日志，也不改变默认日志策略。
 
 ## JSON
 

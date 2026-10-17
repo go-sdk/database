@@ -22,9 +22,9 @@ database/
 │   ├── sqlite/sqlite.go             SQLite 驱动注册、PRAGMA 和连接池默认值
 │   ├── db.go                        驱动注册表、Open、Options 和连接生命周期
 │   ├── error.go                     数据库公共错误和错误链判断
-│   ├── logger.go                    core/logx GORM Logger
+│   ├── logger.go                    core/logx GORM Logger 及 DiscardLogger 静默入口
 │   ├── metadata.go                  公共模型元数据
-│   └── types.go                     面向应用的 GORM 类型别名
+│   └── types.go                     GORM 会话、配置、方言、日志及子句别名
 ├── rdx/
 │   ├── lock/lock.go                 持有者令牌校验的 Redis 租约锁
 │   └── rdx.go                       Redis 单机/Sentinel 初始化和生命周期

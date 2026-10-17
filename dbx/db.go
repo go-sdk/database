@@ -14,7 +14,7 @@ import (
 )
 
 // DialectorFunc 根据原生 DSN 创建 GORM Dialector。
-type DialectorFunc func(dsn string) (gorm.Dialector, error)
+type DialectorFunc func(dsn string) (Dialector, error)
 
 // PoolConfig 定义 database/sql 连接池参数。
 type PoolConfig struct {
@@ -59,7 +59,7 @@ func Register(name string, driver Driver) {
 }
 
 // WithGORMConfig 使用指定的 GORM 配置覆盖默认配置；TranslateError 始终保持开启。
-func WithGORMConfig(value *gorm.Config) Option {
+func WithGORMConfig(value *Config) Option {
 	return func(c *config) {
 		if value != nil {
 			copyValue := *value
@@ -69,7 +69,7 @@ func WithGORMConfig(value *gorm.Config) Option {
 }
 
 // WithGORMOptions 追加传递给 gorm.Open 的选项。
-func WithGORMOptions(options ...gorm.Option) Option {
+func WithGORMOptions(options ...GORMOption) Option {
 	return func(c *config) { c.gormOptions = append(c.gormOptions, options...) }
 }
 

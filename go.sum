@@ -90,8 +90,8 @@ github.com/samber/slog-common v0.22.0 h1:WyPxYRg/c5xUmxZJbtd0QgysHlLBhRA+MngKdJi
 github.com/samber/slog-common v0.22.0/go.mod h1:d/6OaSlzdkl9PFpfRLgn8FwY1OW6EFmPtBpsHX4MrU0=
 github.com/samber/slog-zerolog/v2 v2.9.2 h1:DIFzfzDTxHeRyGlfg/D7b2by7VVzcsBTybRPrzjWF4c=
 github.com/samber/slog-zerolog/v2 v2.9.2/go.mod h1:2q6cYK2OcN6YfQE/WyCnUtigc+yYf3ozqGsGmRwZR6I=
-github.com/shopspring/decimal v1.5.0 h1:HxSWk31RmJv0EyY4oLiGQB9u7WPludUwPBdvQZnYFPc=
-github.com/shopspring/decimal v1.5.0/go.mod h1:gawqmDU56v4yIKSwfBSFip1HdCCXN8/+DMd9qYNcwME=
+github.com/shopspring/decimal v1.6.0 h1:DcTwjCj4tJPLuGZYsR9W0hyX9pQwMIkdo26Ig1T9xX4=
+github.com/shopspring/decimal v1.6.0/go.mod h1:gawqmDU56v4yIKSwfBSFip1HdCCXN8/+DMd9qYNcwME=
 github.com/sony/sonyflake/v2 v2.2.0 h1:wSzEoewlWnUtc3SZX/MpT8zsWTuAnjwrprUYfuPl9Jg=
 github.com/sony/sonyflake/v2 v2.2.0/go.mod h1:09EcfmR846JLupbkgVfzp8QtQwJ+Y8e69VVayHdawzg=
 github.com/spf13/cast v1.10.0 h1:h2x0u2shc1QuLHfxi+cTJvs30+ZAHOGRic8uyGTDWxY=

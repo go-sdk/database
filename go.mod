@@ -11,7 +11,7 @@ require (
 	github.com/rs/zerolog v1.35.1
 	github.com/shopspring/decimal v1.6.0
 	github.com/spf13/cast v1.10.0
-	github.com/tidwall/gjson v1.20.0
+	github.com/tidwall/gjson v1.20.1
 	gorm.io/cli/gorm v0.2.4
 	gorm.io/driver/mysql v1.6.0
 	gorm.io/driver/postgres v1.6.3
